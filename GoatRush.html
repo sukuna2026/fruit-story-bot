@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Goat Rush 🐐</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@twa-dev/sdk@latest/dist/sdk.min.js"></script>
+<style>
+:root {
+  --gold: #f5c842;
+  --gold2: #e6a800;
+  --green-dark: #1a3d0a;
+  --green-mid: #2d6614;
+  --green-light: #3d8c1e;
+  --green-bg: #0f2206;
+  --cream: #fdf6e3;
+  --brown: #6b3a1f;
+  --brown-light: #c8a46e;
+  --wood: #8b5e3c;
+  --wood-light: #d4a96a;
+  --white: #ffffff;
+  --muted: rgba(255,255,255,0.55);
+  --card-bg: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.12);
+  --font: 'Tajawal', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--green-bg); font-family: var(--font); }
+
+/* ===== BACKGROUND ===== */
+.farm-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: linear-gradient(180deg, #87ceeb 0%, #b8e4f7 25%, #4a9e2f 55%, #2d6614 70%, #1a3d0a 100%);
+}
+.farm-bg::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 20% at 50% 55%, rgba(74,158,47,0.6) 0%, transparent 70%),
+    radial-gradient(circle 80px at 20% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 40%, transparent 70%),
+    radial-gradient(circle 50px at 70% 25%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.3) 40%, transparent 70%);
+}
+/* Fence */
+.fence {
+  position: fixed; bottom: 38%; left: 0; right: 0; height: 60px; z-index: 1;
+  display: flex; align-items: flex-end; gap: 0; overflow: hidden;
+}
+.fence-plank {
+  flex: 1; height: 52px; background: linear-gradient(180deg, #c8a46e 0%, #8b5e3c 100%);
+  border: 1.5px solid #6b3a1f; border-radius: 3px 3px 0 0; margin: 0 2px;
+  min-width: 18px; max-width: 22px;
+}
+.fence-rail {
+  position: fixed; bottom: calc(38% + 18px); left: 0; right: 0; height: 10px;
+  background: linear-gradient(180deg, #d4a96a 0%, #8b5e3c 100%);
+  border-top: 1.5px solid #f5c842; border-bottom: 1.5px solid #6b3a1f; z-index: 2;
+}
+
+/* ===== APP SHELL ===== */
+#app {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column;
+  max-width: 430px; margin: 0 auto;
+}
+
+/* ===== SCREENS ===== */
+.screen { display: none; flex-direction: column; height: 100%; }
+.screen.active { display: flex; }
+
+/* ===== TOP BAR ===== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 8px;
+  background: rgba(0,0,0,0.35); backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(245,200,66,0.2);
+}
+.topbar-logo { font-size: 18px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; }
+.topbar-coins {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(245,200,66,0.4);
+  border-radius: 20px; padding: 5px 12px;
+}
+.topbar-coins span { font-size: 15px; font-weight: 700; color: var(--gold); }
+.topbar-settings {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px;
+}
+
+/* ===== MAIN SCREEN ===== */
+#main { background: transparent; }
+.main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 80px; }
+
+/* Stock box */
+.stock-box {
+  margin: 12px 14px 0;
+  background: rgba(139,94,60,0.85); border: 2px solid var(--wood-light);
+  border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  backdrop-filter: blur(4px);
+}
+.stock-label { font-size: 11px; color: var(--wood-light); text-transform: uppercase; letter-spacing: 1px; }
+.stock-amount { font-size: 22px; font-weight: 800; color: var(--cream); }
+.stock-rate { font-size: 12px; color: rgba(253,246,227,0.7); }
+.scissors-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--cream); border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; cursor: pointer;
+  transition: transform 0.12s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.scissors-btn:active { transform: scale(0.88) rotate(-20deg); }
+
+/* Goat area */
+.goat-area {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 0 0; position: relative;
+}
+.goat-wrapper {
+  position: relative; cursor: pointer;
+  transition: transform 0.1s;
+}
+.goat-wrapper:active { transform: scale(0.93); }
+.goat-svg-main { width: 160px; height: 160px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); }
+
+/* Daily rate bar */
+.rate-bar-wrap {
+  margin: 8px 14px 0;
+  background: rgba(0,0,0,0.4); border: 1.5px solid var(--wood-light);
+  border-radius: 20px; overflow: hidden; position: relative; height: 30px;
+}
+.rate-bar-fill {
+  height: 100%; background: linear-gradient(90deg, var(--gold2), var(--gold));
+  transition: width 0.5s ease; border-radius: 20px;
+}
+.rate-bar-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--brown);
+}
+
+/* Trade button */
+.trade-btn {
+  margin: 10px 14px 0; width: calc(100% - 28px);
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+  border: none; border-radius: 22px; padding: 14px;
+  font-family: var(--font); font-size: 16px; font-weight: 800; color: var(--brown);
+  cursor: pointer; letter-spacing: 0.5px;
+  box-shadow: 0 3px 12px rgba(245,200,66,0.4);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.trade-btn:active { transform: scale(0.97); box-shadow: 0 1px 6px rgba(245,200,66,0.3); }
+.trade-rate { font-size: 11px; color: rgba(107,58,31,0.8); margin-top: 2px; font-weight: 500; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: rgba(10,20,5,0.92); backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(245,200,66,0.25);
+  display: flex; z-index: 100;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 0 8px; cursor: pointer; color: rgba(255,255,255,0.4);
+  font-size: 10px; gap: 3px; transition: color 0.15s;
+  font-family: var(--font);
+}
+.nav-item.active, .nav-item:active { color: var(--gold); }
+.nav-item svg { width: 22px; height: 22px; }
+
+/* ===== UPGRADE SCREEN ===== */
+#upgrade { background: rgba(10,20,5,0.96); }
+.screen-header {
+  padding: 14px 16px 12px;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(245,200,66,0.2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.screen-title { font-size: 18px; font-weight: 800; color: var(--gold); }
+.screen-back { font-size: 13px; color: rgba(255,255,255,0.6); cursor: pointer; }
+.upgrade-scroll { flex: 1; overflow-y: auto; padding: 12px 14px 80px; display: flex; flex-direction: column; gap: 10px; }
+
+.upgrade-card {
+  background: rgba(139,94,60,0.2); border: 1.5px solid rgba(139,94,60,0.5);
+  border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color 0.2s;
+}
+.upgrade-card.current { border-color: var(--gold); background: rgba(245,200,66,0.08); }
+.upgrade-card.locked { opacity: 0.5; }
+
+.lv-box {
+  width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(245,200,66,0.1); border: 1.5px solid var(--gold);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.lv-num { font-size: 9px; color: var(--gold); font-weight: 700; }
+.lv-scissors { font-size: 22px; }
+
+.upgrade-info { flex: 1; }
+.upgrade-name { font-size: 14px; font-weight: 700; color: var(--cream); }
+.upgrade-prod { font-size: 12px; color: rgba(253,246,227,0.6); margin-top: 2px; }
+.upgrade-cost { font-size: 12px; color: var(--gold); margin-top: 3px; font-weight: 600; }
+
+.upgrade-action {
+  border: none; border-radius: 10px; padding: 9px 16px;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: transform 0.12s;
+}
+.upgrade-action:active { transform: scale(0.95); }
+.upgrade-action.active-btn { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); cursor: default; }
+.upgrade-action.do-btn { background: var(--gold); color: var(--brown); }
+.upgrade-action.locked-btn { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+
+/* ===== TASKS SCREEN ===== */
+#tasks { background: rgba(10,20,5,0.96); }
+.tasks-scroll { flex: 1; overflow-y: auto; padding: 12px 14px 80px; }
+.section-header {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin: 14px 0 8px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(245,200,66,0.2);
+}
+.task-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.task-card:active { background: rgba(255,255,255,0.1); }
+.task-card.claimed { opacity: 0.45; cursor: default; }
+.task-icon-wrap {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.task-icon-wrap.tg { background: rgba(41,182,246,0.15); }
+.task-icon-wrap.social { background: rgba(171,71,188,0.15); }
+.task-icon-wrap.ref { background: rgba(76,175,80,0.15); }
+.task-name { font-size: 13px; color: var(--cream); flex: 1; line-height: 1.3; }
+.task-reward-badge {
+  background: rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.35);
+  border-radius: 10px; padding: 4px 10px;
+  font-size: 12px; font-weight: 700; color: var(--gold); white-space: nowrap;
+}
+.task-done-badge {
+  background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.35);
+  border-radius: 10px; padding: 4px 10px;
+  font-size: 12px; color: #66bb6a; white-space: nowrap;
+}
+
+/* ===== WALLET SCREEN ===== */
+#wallet { background: rgba(10,20,5,0.96); }
+.wallet-scroll { flex: 1; overflow-y: auto; padding: 0 14px 80px; }
+.wallet-hero {
+  margin: 14px 0;
+  background: linear-gradient(135deg, rgba(245,200,66,0.12), rgba(230,168,0,0.05));
+  border: 1.5px solid rgba(245,200,66,0.35); border-radius: 18px;
+  padding: 20px; text-align: center;
+}
+.wallet-icon { font-size: 36px; margin-bottom: 6px; }
+.wallet-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.wallet-bal { font-size: 40px; font-weight: 800; color: var(--gold); margin: 4px 0; }
+.wallet-sub { font-size: 13px; color: rgba(255,255,255,0.5); }
+.wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 16px; }
+.w-mini {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px;
+}
+.w-mini-lbl { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.w-mini-val { font-size: 16px; font-weight: 700; color: var(--cream); }
+.withdraw-title { font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.wallet-opt {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.wallet-opt:active { border-color: var(--gold); }
+.w-icon {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.w-icon.ton { background: rgba(41,182,246,0.15); }
+.w-icon.usdt { background: rgba(38,166,154,0.15); }
+.w-icon.bnb { background: rgba(243,186,47,0.15); }
+.w-icon.trust { background: rgba(100,181,246,0.15); }
+.w-icon.mm { background: rgba(255,112,0,0.12); }
+.w-name1 { font-size: 14px; font-weight: 700; color: var(--cream); }
+.w-name2 { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.w-arrow { font-size: 18px; color: var(--gold); margin-right: auto; }
+
+/* ===== REFERRAL SCREEN ===== */
+#referral { background: rgba(10,20,5,0.96); }
+.ref-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 80px; }
+.ref-hero {
+  background: linear-gradient(135deg, rgba(76,175,80,0.1), rgba(102,187,106,0.05));
+  border: 1.5px solid rgba(76,175,80,0.3); border-radius: 18px;
+  padding: 20px; text-align: center; margin-bottom: 14px;
+}
+.ref-pct { font-size: 36px; font-weight: 800; color: #66bb6a; }
+.ref-desc { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+.ref-link-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ref-link-text {
+  flex: 1; font-size: 12px; color: #66bb6a;
+  font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.copy-btn {
+  background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.4);
+  color: #66bb6a; border-radius: 8px; padding: 7px 14px;
+  font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.ref-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.ref-stat {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; text-align: center;
+}
+.ref-stat-n { font-size: 22px; font-weight: 800; color: var(--gold); }
+.ref-stat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.ref-empty {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 32px; text-align: center;
+}
+.ref-empty-icon { font-size: 40px; margin-bottom: 8px; }
+.ref-empty-txt { font-size: 13px; color: var(--muted); }
+
+/* ===== SETTINGS MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px); z-index: 200;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: #0d1f06; border: 1.5px solid rgba(245,200,66,0.2);
+  border-radius: 24px 24px 0 0; padding: 20px 18px 36px;
+  width: 100%; max-width: 430px;
+}
+.modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 16px; font-weight: 800; color: var(--gold); margin-bottom: 14px; text-align: center; }
+.setting-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-icon { font-size: 20px; width: 28px; text-align: center; }
+.setting-lbl { flex: 1; font-size: 14px; color: var(--cream); }
+.toggle-wrap {
+  width: 44px; height: 24px; background: rgba(255,255,255,0.15);
+  border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s;
+}
+.toggle-wrap.on { background: var(--gold); }
+.toggle-knob {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  background: white; border-radius: 50%; transition: transform 0.2s;
+}
+.toggle-wrap.on .toggle-knob { transform: translateX(20px); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: rgba(20,40,10,0.95); border: 1px solid var(--gold);
+  color: var(--gold); padding: 10px 22px; border-radius: 22px;
+  font-size: 13px; font-weight: 700; pointer-events: none;
+  opacity: 0; transition: opacity 0.25s; z-index: 999; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ===== FLOAT ANIM ===== */
+.float-wool {
+  position: fixed; pointer-events: none;
+  font-size: 18px; font-weight: 800; color: var(--gold);
+  animation: floatUp 0.9s ease-out forwards; z-index: 500;
+}
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
+}
+/* Goat bounce */
+@keyframes goatBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.goat-bounce { animation: goatBounce 0.35s ease; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(245,200,66,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Farm background -->
+<div class="farm-bg"></div>
+<div class="fence" id="fenceEl"></div>
+<div class="fence-rail"></div>
+
+<div id="app">
+
+<!-- ==================== MAIN SCREEN ==================== -->
+<div class="screen active" id="main">
+  <div class="topbar">
+    <div class="topbar-logo">🐐 Goat Rush</div>
+    <div class="topbar-coins">
+      <span>💎</span>
+      <span id="topCoins">0</span>
+    </div>
+    <div class="topbar-settings" onclick="openSettings()">⚙️</div>
+  </div>
+  <div class="main-scroll">
+    <!-- Stock -->
+    <div class="stock-box">
+      <div>
+        <div class="stock-label">🧶 مخزون الصوف</div>
+        <div class="stock-amount" id="stockAmount">0.00</div>
+        <div class="stock-rate" id="stockRate">+0.011574/ث</div>
+      </div>
+      <div class="scissors-btn" onclick="clickGoat()" title="اجمع الصوف">✂️</div>
+    </div>
+
+    <!-- Goat -->
+    <div class="goat-area">
+      <div class="goat-wrapper" onclick="clickGoat()" id="goatWrap">
+        <svg class="goat-svg-main" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Body wool -->
+          <ellipse cx="100" cy="128" rx="62" ry="46" fill="#f0ead8"/>
+          <ellipse cx="100" cy="122" rx="58" ry="42" fill="#fafaf5"/>
+          <!-- Wool bumps -->
+          <circle cx="68" cy="105" r="16" fill="#fafaf5"/>
+          <circle cx="85" cy="96" r="18" fill="#fafaf5"/>
+          <circle cx="105" cy="93" r="20" fill="#fafaf5"/>
+          <circle cx="125" cy="98" r="16" fill="#fafaf5"/>
+          <circle cx="138" cy="110" r="14" fill="#f0ead8"/>
+          <circle cx="62" cy="118" r="13" fill="#f0ead8"/>
+          <!-- Head -->
+          <ellipse cx="100" cy="68" rx="28" ry="26" fill="#e8dcc0"/>
+          <!-- Ears -->
+          <ellipse cx="76" cy="55" rx="7" ry="12" transform="rotate(-20 76 55)" fill="#d4c4a0"/>
+          <ellipse cx="124" cy="55" rx="7" ry="12" transform="rotate(20 124 55)" fill="#d4c4a0"/>
+          <ellipse cx="76" cy="53" rx="4" ry="8" transform="rotate(-20 76 53)" fill="#e8a0a0"/>
+          <ellipse cx="124" cy="53" rx="4" ry="8" transform="rotate(20 124 53)" fill="#e8a0a0"/>
+          <!-- Horns -->
+          <path d="M82 46 Q74 32 70 28 Q76 30 80 38Z" fill="#c8a870"/>
+          <path d="M118 46 Q126 32 130 28 Q124 30 120 38Z" fill="#c8a870"/>
+          <!-- Eyes -->
+          <circle cx="89" cy="66" r="5" fill="#3a2510"/>
+          <circle cx="111" cy="66" r="5" fill="#3a2510"/>
+          <circle cx="90.5" cy="64.5" r="2" fill="white"/>
+          <circle cx="112.5" cy="64.5" r="2" fill="white"/>
+          <!-- Nose -->
+          <ellipse cx="100" cy="78" rx="7" ry="4" fill="#e8a0a0"/>
+          <circle cx="97" cy="77" r="1.5" fill="#c06060"/>
+          <circle cx="103" cy="77" r="1.5" fill="#c06060"/>
+          <!-- Beard -->
+          <ellipse cx="100" cy="89" rx="5" ry="8" fill="#d4c4a0"/>
+          <!-- Legs -->
+          <rect x="68" y="160" width="12" height="28" rx="6" fill="#c8a870"/>
+          <rect x="84" y="162" width="12" height="26" rx="6" fill="#c8a870"/>
+          <rect x="104" y="162" width="12" height="26" rx="6" fill="#c8a870"/>
+          <rect x="120" y="160" width="12" height="28" rx="6" fill="#c8a870"/>
+          <!-- Hooves -->
+          <rect x="68" y="183" width="12" height="7" rx="3" fill="#5a3a1a"/>
+          <rect x="84" y="183" width="12" height="7" rx="3" fill="#5a3a1a"/>
+          <rect x="104" y="183" width="12" height="7" rx="3" fill="#5a3a1a"/>
+          <rect x="120" y="183" width="12" height="7" rx="3" fill="#5a3a1a"/>
+          <!-- Tail -->
+          <ellipse cx="158" cy="125" rx="8" ry="12" transform="rotate(25 158 125)" fill="#fafaf5"/>
+          <!-- Wool coin -->
+          <circle cx="100" cy="115" r="14" fill="#f5c842" opacity="0.9"/>
+          <text x="100" y="120" text-anchor="middle" font-size="14" fill="#8b5e3c">🧶</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Daily rate bar -->
+    <div class="rate-bar-wrap">
+      <div class="rate-bar-fill" id="rateBar" style="width:2%"></div>
+      <div class="rate-bar-text" id="rateBarText">🧶 21.23 / 1000 — معدل يومي</div>
+    </div>
+
+    <!-- Trade button -->
+    <button class="trade-btn" onclick="showScreen('wallet')">
+      💱 تبادل الصوف
+      <div class="trade-rate">1000 🧶 = 1.00 💎 TON</div>
+    </button>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showScreen('main')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      الرئيسية
+    </div>
+    <div class="nav-item" onclick="showScreen('upgrade')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17,11 12,6 7,11"/><polyline points="17,18 12,13 7,18"/></svg>
+      ترقية
+    </div>
+    <div class="nav-item" onclick="showScreen('tasks')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      مهام
+    </div>
+    <div class="nav-item" onclick="showScreen('wallet')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      محفظة
+    </div>
+    <div class="nav-item" onclick="showScreen('referral')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      إحالة
+    </div>
+  </div>
+</div>
+
+<!-- ==================== UPGRADE SCREEN ==================== -->
+<div class="screen" id="upgrade">
+  <div class="screen-header">
+    <div class="screen-title">✂️ ترقية المقص</div>
+    <div class="screen-back" onclick="showScreen('main')">← رجوع</div>
+  </div>
+  <div class="upgrade-scroll" id="upgradeList"></div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>الرئيسية</div>
+    <div class="nav-item active" onclick="showScreen('upgrade')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17,11 12,6 7,11"/><polyline points="17,18 12,13 7,18"/></svg>ترقية</div>
+    <div class="nav-item" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>مهام</div>
+    <div class="nav-item" onclick="showScreen('wallet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>محفظة</div>
+    <div class="nav-item" onclick="showScreen('referral')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>إحالة</div>
+  </div>
+</div>
+
+<!-- ==================== TASKS SCREEN ==================== -->
+<div class="screen" id="tasks">
+  <div class="screen-header">
+    <div class="screen-title">📋 المهام</div>
+    <div class="screen-back" style="color:var(--gold);font-weight:700" id="earnedBadge">+0 🧶 مكتسب</div>
+  </div>
+  <div class="tasks-scroll" id="tasksList"></div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>الرئيسية</div>
+    <div class="nav-item" onclick="showScreen('upgrade')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17,11 12,6 7,11"/><polyline points="17,18 12,13 7,18"/></svg>ترقية</div>
+    <div class="nav-item active" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>مهام</div>
+    <div class="nav-item" onclick="showScreen('wallet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>محفظة</div>
+    <div class="nav-item" onclick="showScreen('referral')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>إحالة</div>
+  </div>
+</div>
+
+<!-- ==================== WALLET SCREEN ==================== -->
+<div class="screen" id="wallet">
+  <div class="screen-header">
+    <div class="screen-title">💎 المحفظة</div>
+    <div class="screen-back" onclick="showScreen('main')">← رجوع</div>
+  </div>
+  <div class="wallet-scroll">
+    <div class="wallet-hero">
+      <div class="wallet-icon">🧶</div>
+      <div class="wallet-lbl">رصيد الصوف</div>
+      <div class="wallet-bal" id="walletBal">0</div>
+      <div class="wallet-sub" id="walletUsdt">≈ 0.0000 TON</div>
+    </div>
+    <div class="wallet-grid">
+      <div class="w-mini"><div class="w-mini-lbl">إجمالي السحب</div><div class="w-mini-val">0.00 TON</div></div>
+      <div class="w-mini"><div class="w-mini-lbl">معلق</div><div class="w-mini-val">0</div></div>
+      <div class="w-mini"><div class="w-mini-lbl">مكتمل</div><div class="w-mini-val">0</div></div>
+      <div class="w-mini"><div class="w-mini-lbl">مستوى المقص</div><div class="w-mini-val" id="walletLv">Lv1</div></div>
+    </div>
+    <div class="withdraw-title">اختر محفظتك للسحب</div>
+    <!-- Wallet options -->
+    <div class="wallet-opt" onclick="openWallet('tonkeeper')">
+      <div class="w-icon ton">💎</div>
+      <div><div class="w-name1">TON Keeper</div><div class="w-name2">الحد الأدنى: 1 TON</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+    <div class="wallet-opt" onclick="openWallet('bybit')">
+      <div class="w-icon bnb">🟡</div>
+      <div><div class="w-name1">Bybit</div><div class="w-name2">الحد الأدنى: 5 USDT</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+    <div class="wallet-opt" onclick="openWallet('binance')">
+      <div class="w-icon bnb">🔶</div>
+      <div><div class="w-name1">Binance Pay</div><div class="w-name2">الحد الأدنى: 10 USDT</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+    <div class="wallet-opt" onclick="openWallet('trust')">
+      <div class="w-icon trust">🔵</div>
+      <div><div class="w-name1">Trust Wallet</div><div class="w-name2">BTC / ETH / TON / USDT</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+    <div class="wallet-opt" onclick="openWallet('metamask')">
+      <div class="w-icon mm">🦊</div>
+      <div><div class="w-name1">MetaMask</div><div class="w-name2">ETH / BNB / USDT</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+    <div class="wallet-opt" onclick="openWallet('okx')">
+      <div class="w-icon ton">⚫</div>
+      <div><div class="w-name1">OKX Wallet</div><div class="w-name2">BTC / ETH / TON / USDT</div></div>
+      <div class="w-arrow">›</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>الرئيسية</div>
+    <div class="nav-item" onclick="showScreen('upgrade')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17,11 12,6 7,11"/><polyline points="17,18 12,13 7,18"/></svg>ترقية</div>
+    <div class="nav-item" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>مهام</div>
+    <div class="nav-item active" onclick="showScreen('wallet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>محفظة</div>
+    <div class="nav-item" onclick="showScreen('referral')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>إحالة</div>
+  </div>
+</div>
+
+<!-- ==================== REFERRAL SCREEN ==================== -->
+<div class="screen" id="referral">
+  <div class="screen-header">
+    <div class="screen-title">🤝 الإحالة</div>
+    <div class="screen-back" onclick="showScreen('main')">← رجوع</div>
+  </div>
+  <div class="ref-scroll">
+    <div class="ref-hero">
+      <div class="ref-pct">5%</div>
+      <div style="font-size:14px;color:#66bb6a;font-weight:700">من أرباح كل صديق تدعوه</div>
+      <div class="ref-desc">+ مكافأة فورية 500 🧶 عند تسجيل كل صديق</div>
+    </div>
+    <div class="ref-link-card">
+      <div class="ref-link-text" id="refLink">https://t.me/GoatRushBot?start=USER_ID</div>
+      <div class="copy-btn" onclick="copyRefLink()">📋 نسخ</div>
+    </div>
+    <div class="ref-stats">
+      <div class="ref-stat"><div class="ref-stat-n" id="refCount">0</div><div class="ref-stat-l">مدعوون</div></div>
+      <div class="ref-stat"><div class="ref-stat-n" id="refActive">0</div><div class="ref-stat-l">نشطون</div></div>
+      <div class="ref-stat"><div class="ref-stat-n" id="refEarned">0🧶</div><div class="ref-stat-l">أرباح</div></div>
+    </div>
+    <div class="ref-empty">
+      <div class="ref-empty-icon">🐐</div>
+      <div class="ref-empty-txt">لا يوجد أصدقاء مدعوون بعد<br>ابدأ بمشاركة رابطك الآن!</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showScreen('main')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>الرئيسية</div>
+    <div class="nav-item" onclick="showScreen('upgrade')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17,11 12,6 7,11"/><polyline points="17,18 12,13 7,18"/></svg>ترقية</div>
+    <div class="nav-item" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>مهام</div>
+    <div class="nav-item" onclick="showScreen('wallet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>محفظة</div>
+    <div class="nav-item active" onclick="showScreen('referral')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>إحالة</div>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ الإعدادات</div>
+    <div class="setting-row">
+      <div class="setting-icon">🎵</div>
+      <div class="setting-lbl">الموسيقى</div>
+      <div class="toggle-wrap on" id="musicToggle" onclick="toggleMusic()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-icon">🔔</div>
+      <div class="setting-lbl">الإشعارات</div>
+      <div class="toggle-wrap on" id="notifToggle" onclick="toggleNotif()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-icon">🌐</div>
+      <div class="setting-lbl">اللغة</div>
+      <div style="color:var(--gold);font-size:13px;font-weight:700">العربية ›</div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-icon">❓</div>
+      <div class="setting-lbl">الأسئلة الشائعة</div>
+      <div style="color:var(--gold);font-size:13px;font-weight:700">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+const LEVELS = [
+  { lv: 1, name: 'مقص مبتدئ', icon: '✂️', prod: 1000, rate: 0.011574, cost: 0, costLbl: 'مجاني' },
+  { lv: 2, name: 'مقص ذهبي', icon: '✂️', prod: 3000, rate: 0.034722, cost: 5000, costLbl: '5,000 🧶' },
+  { lv: 3, name: 'مقص ماسي', icon: '✂️', prod: 7000, rate: 0.081019, cost: 20000, costLbl: '20,000 🧶' },
+  { lv: 4, name: 'مقص أسطوري', icon: '✂️', prod: 15000, rate: 0.173611, cost: 75000, costLbl: '75,000 🧶' },
+  { lv: 5, name: 'مقص إلهي', icon: '🌟', prod: 50000, rate: 0.578703, cost: 300000, costLbl: '300,000 🧶' },
+];
+
+// Real Telegram group links
+const TASKS = [
+  // Telegram
+  { id: 't1', cat: 'telegram', icon: '📢', name: 'انضم لقناة Dajalff', reward: 500, url: 'https://t.me/dajalff', verified: false },
+  { id: 't2', cat: 'telegram', icon: '💬', name: 'انضم لمجموعة Imp_Ru', reward: 400, url: 'https://t.me/Imp_Ru', verified: false },
+  { id: 't3', cat: 'telegram', icon: '🆘', name: 'انضم لقناة Help Luxe', reward: 400, url: 'https://t.me/help_luxe', verified: false },
+  { id: 't4', cat: 'telegram', icon: '📰', name: 'انضم لقناة WoolRush News', reward: 600, url: 'https://t.me/WoolRushNews', verified: false },
+  { id: 't5', cat: 'telegram', icon: '🔔', name: 'انضم لقناة Vzpodpiska', reward: 350, url: 'https://t.me/vzpodpiska06', verified: false },
+  { id: 't6', cat: 'telegram', icon: '🤖', name: 'تحدث مع البوت Vzz31qqaa', reward: 300, url: 'https://t.me/Vzz31qqaa_bot', verified: false },
+  // Social - placeholders for future
+  { id: 's1', cat: 'social', icon: '📸', name: 'تابعنا على انستغرام', reward: 400, url: '#instagram', verified: false },
+  { id: 's2', cat: 'social', icon: '🎵', name: 'تابعنا على تيك توك', reward: 400, url: '#tiktok', verified: false },
+  { id: 's3', cat: 'social', icon: '▶️', name: 'اشترك في يوتيوب', reward: 500, url: '#youtube', verified: false },
+  // Referral
+  { id: 'r1', cat: 'referral', icon: '👥', name: 'ادعُ 3 أصدقاء', reward: 1500, url: null, verified: false },
+  { id: 'r2', cat: 'referral', icon: '🌟', name: 'ادعُ 10 أصدقاء', reward: 5000, url: null, verified: false },
+  { id: 'r3', cat: 'referral', icon: '👑', name: 'ادعُ 50 صديق', reward: 25000, url: null, verified: false },
+];
+
+// ===================== STATE =====================
+let wool = 0;
+let level = 1;
+let ratePerSec = 0.011574;
+let totalEarned = 0;
+let earnedFromTasks = 0;
+let lastTick = Date.now();
+let claimedTasks = {};
+let userId = Math.floor(Math.random() * 900000 + 100000);
+
+// Load from localStorage
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('goatRushState') || '{}');
+    if (s.wool) wool = s.wool;
+    if (s.level) { level = s.level; ratePerSec = LEVELS[level-1].rate; }
+    if (s.earnedFromTasks) earnedFromTasks = s.earnedFromTasks;
+    if (s.claimedTasks) claimedTasks = s.claimedTasks;
+    if (s.userId) userId = s.userId;
+    // Offline production
+    if (s.lastSave) {
+      const elapsed = (Date.now() - s.lastSave) / 1000;
+      const gained = ratePerSec * Math.min(elapsed, 86400);
+      wool += gained;
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('goatRushState', JSON.stringify({
+      wool, level, earnedFromTasks, claimedTasks, userId, lastSave: Date.now()
+    }));
+  } catch(e) {}
+}
+
+// ===================== INIT =====================
+function init() {
+  loadState();
+  buildFence();
+  buildUpgrades();
+  buildTasks();
+  updateRefLink();
+  tick();
+  setInterval(tick, 1000);
+  setInterval(saveState, 10000);
+  // Telegram WebApp init
+  try {
+    if (window.Telegram && Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+      const tgUser = Telegram.WebApp.initDataUnsafe?.user;
+      if (tgUser) {
+        userId = tgUser.id;
+        updateRefLink();
+      }
+    }
+  } catch(e) {}
+}
+
+function buildFence() {
+  const f = document.getElementById('fenceEl');
+  for(let i=0; i<24; i++) {
+    const p = document.createElement('div');
+    p.className = 'fence-plank';
+    f.appendChild(p);
+  }
+}
+
+// ===================== GAME LOOP =====================
+function tick() {
+  const now = Date.now();
+  const elapsed = (now - lastTick) / 1000;
+  lastTick = now;
+  wool += ratePerSec * elapsed;
+  updateMainUI();
+}
+
+function updateMainUI() {
+  const w = Math.floor(wool);
+  document.getElementById('stockAmount').textContent = wool.toFixed(2);
+  document.getElementById('topCoins').textContent = w.toLocaleString();
+  document.getElementById('stockRate').textContent = '+' + ratePerSec.toFixed(6) + '/ث';
+  const lv = LEVELS[level-1];
+  const pct = Math.min(100, (wool / lv.prod) * 100);
+  document.getElementById('rateBar').style.width = pct + '%';
+  document.getElementById('rateBarText').textContent =
+    '🧶 ' + wool.toFixed(2) + ' / ' + lv.prod.toLocaleString() + ' — معدل يومي';
+  document.getElementById('walletBal').textContent = w.toLocaleString() + ' 🧶';
+  document.getElementById('walletUsdt').textContent = '≈ ' + (wool / 1000).toFixed(4) + ' TON';
+  document.getElementById('walletLv').textContent = 'Lv' + level;
+}
+
+// ===================== CLICK GOAT =====================
+function clickGoat() {
+  const gain = Math.floor(LEVELS[level-1].prod / 24);
+  wool += gain;
+  updateMainUI();
+  spawnFloat(gain);
+  const g = document.getElementById('goatWrap');
+  g.classList.remove('goat-bounce');
+  void g.offsetWidth;
+  g.classList.add('goat-bounce');
+}
+
+function spawnFloat(n) {
+  const el = document.createElement('div');
+  el.className = 'float-wool';
+  el.textContent = '+' + n.toLocaleString() + ' 🧶';
+  const g = document.getElementById('goatWrap').getBoundingClientRect();
+  el.style.left = (g.left + g.width/2 - 30) + 'px';
+  el.style.top = (g.top + 20) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+// ===================== UPGRADES =====================
+function buildUpgrades() {
+  const list = document.getElementById('upgradeList');
+  list.innerHTML = '';
+  LEVELS.forEach(lv => {
+    const isCurrent = lv.lv === level;
+    const isLocked = lv.lv > level + 1;
+    const canDo = lv.lv === level + 1;
+    const card = document.createElement('div');
+    card.className = 'upgrade-card' + (isCurrent ? ' current' : '') + (isLocked ? ' locked' : '');
+    let btn = '';
+    if (isCurrent) btn = `<button class="upgrade-action active-btn">نشط ✓</button>`;
+    else if (canDo) btn = `<button class="upgrade-action do-btn" onclick="doUpgrade(${lv.lv})">ترقية ⬆</button>`;
+    else if (lv.lv < level) btn = `<button class="upgrade-action active-btn">مكتمل ✓</button>`;
+    else btn = `<button class="upgrade-action locked-btn">🔒 مقفل</button>`;
+    card.innerHTML = `
+      <div class="lv-box">
+        <div class="lv-num">Lv.${lv.lv}</div>
+        <div class="lv-scissors">${lv.icon}</div>
+      </div>
+      <div class="upgrade-info">
+        <div class="upgrade-name">${lv.name}</div>
+        <div class="upgrade-prod">${lv.prod.toLocaleString()} 🧶 / يوم &nbsp;|&nbsp; +${lv.rate.toFixed(6)}/ث</div>
+        ${lv.cost > 0 ? `<div class="upgrade-cost">💰 ${lv.costLbl}</div>` : '<div class="upgrade-cost">🎁 مجاني</div>'}
+      </div>
+      ${btn}
+    `;
+    list.appendChild(card);
+  });
+}
+
+function doUpgrade(lv) {
+  const target = LEVELS[lv - 1];
+  if (wool < target.cost) { showToast('❌ صوف غير كافٍ! تحتاج ' + target.costLbl); return; }
+  if (lv !== level + 1) { showToast('يجب الترقية بالترتيب!'); return; }
+  wool -= target.cost;
+  level = lv;
+  ratePerSec = target.rate;
+  buildUpgrades();
+  updateMainUI();
+  showToast('🎉 تمت الترقية إلى ' + target.name + '!');
+  saveState();
+}
+
+// ===================== TASKS =====================
+function buildTasks() {
+  const list = document.getElementById('tasksList');
+  list.innerHTML = '';
+  const cats = [
+    { key: 'telegram', label: '📨 مهام تيليجرام', cls: 'tg' },
+    { key: 'social', label: '🌐 مهام اجتماعية', cls: 'social' },
+    { key: 'referral', label: '🤝 مهام الإحالة', cls: 'ref' },
+  ];
+  cats.forEach(cat => {
+    const tasks = TASKS.filter(t => t.cat === cat.key);
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.textContent = cat.label;
+    list.appendChild(header);
+    tasks.forEach(task => {
+      const done = claimedTasks[task.id];
+      const card = document.createElement('div');
+      card.className = 'task-card' + (done ? ' claimed' : '');
+      card.id = 'task-' + task.id;
+      card.innerHTML = `
+        <div class="task-icon-wrap ${cat.cls}">${task.icon}</div>
+        <div class="task-name">${task.name}</div>
+        ${done
+          ? '<div class="task-done-badge">✅ مكتمل</div>'
+          : `<div class="task-reward-badge">+${task.reward.toLocaleString()} 🧶</div>`
+        }
+      `;
+      if (!done) card.onclick = () => handleTask(task);
+      list.appendChild(card);
+    });
+  });
+}
+
+function handleTask(task) {
+  if (claimedTasks[task.id]) return;
+  if (task.cat === 'referral') {
+    showToast('ادعُ أصدقاء عبر رابط الإحالة!');
+    showScreen('referral');
+    return;
+  }
+  if (task.url && task.url !== '#instagram' && task.url !== '#tiktok' && task.url !== '#youtube') {
+    // Open real link
+    try {
+      if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.openTelegramLink(task.url);
+      } else {
+        window.open(task.url, '_blank');
+      }
+    } catch(e) { window.open(task.url, '_blank'); }
+    // After 3 seconds, allow claim
+    showToast('⏳ انضم أولاً ثم انقر مجدداً للمطالبة...');
+    setTimeout(() => {
+      const card = document.getElementById('task-' + task.id);
+      if (card && !claimedTasks[task.id]) {
+        card.onclick = () => claimTask(task);
+      }
+    }, 3000);
+  } else if (task.url && task.url.startsWith('#')) {
+    showToast('🔜 قريباً — ستُضاف روابطنا الاجتماعية قريباً!');
+  }
+}
+
+function claimTask(task) {
+  if (claimedTasks[task.id]) return;
+  claimedTasks[task.id] = true;
+  wool += task.reward;
+  earnedFromTasks += task.reward;
+  document.getElementById('earnedBadge').textContent = '+' + earnedFromTasks.toLocaleString() + ' 🧶 مكتسب';
+  buildTasks();
+  updateMainUI();
+  showToast('✅ +' + task.reward.toLocaleString() + ' 🧶 تمت الإضافة!');
+  saveState();
+}
+
+// ===================== WALLET =====================
+const WALLET_URLS = {
+  tonkeeper: 'https://tonkeeper.com',
+  bybit: 'https://www.bybit.com',
+  binance: 'https://www.binance.com',
+  trust: 'https://trustwallet.com',
+  metamask: 'https://metamask.io',
+  okx: 'https://www.okx.com/web3',
+};
+
+function openWallet(key) {
+  if (wool < 1000) { showToast('❌ تحتاج 1000 🧶 على الأقل للسحب'); return; }
+  const url = WALLET_URLS[key];
+  showToast('🔗 جارٍ فتح ' + key + '...');
+  try {
+    if (window.Telegram && Telegram.WebApp) Telegram.WebApp.openLink(url);
+    else window.open(url, '_blank');
+  } catch(e) { window.open(url, '_blank'); }
+}
+
+// ===================== REFERRAL =====================
+function updateRefLink() {
+  document.getElementById('refLink').textContent =
+    'https://t.me/GoatRushBot?start=' + userId;
+}
+
+function copyRefLink() {
+  const link = 'https://t.me/GoatRushBot?start=' + userId;
+  try {
+    navigator.clipboard.writeText(link);
+    showToast('📋 تم نسخ الرابط!');
+  } catch(e) {
+    try {
+      if (window.Telegram && Telegram.WebApp) Telegram.WebApp.showAlert('رابطك: ' + link);
+    } catch(e2) { showToast('📋 ' + link); }
+  }
+}
+
+// ===================== NAVIGATION =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.bottom-nav').forEach(nav => {
+    nav.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  });
+  if (id === 'upgrade') buildUpgrades();
+  if (id === 'tasks') buildTasks();
+  updateMainUI();
+}
+
+// ===================== SETTINGS =====================
+function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings(e) { if (e.target === document.getElementById('settingsModal')) document.getElementById('settingsModal').classList.remove('open'); }
+function toggleMusic() { document.getElementById('musicToggle').classList.toggle('on'); }
+function toggleNotif() { document.getElementById('notifToggle').classList.toggle('on'); }
+
+// ===================== TOAST =====================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===================== START =====================
+init();
+</script>
+</body>
+</html>
